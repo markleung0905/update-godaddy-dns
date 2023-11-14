@@ -16,32 +16,33 @@ publicIP = pif.get_public_ip('ident.me')
 
 # E.g.: to update your_record.yourdomain.com set domain and record to:
 domain = os.getenv('DOMAIN')
-name = os.getenv('NAME')
+names = os.getenv('NAME').split(',')
 
-if os.path.isfile('godaddy_ip.txt'):
-    try:
-        ip_file = open('godaddy_ip.txt', 'r')
-        read_ip = ip_file.read().strip('\n')
-        ip_file.close()
-    except:
-        print("Cannot read IP file")
-        sys.exit()
-    if read_ip == publicIP:
-        print("Read the IP file, no need to change IP")
-        sys.exit()
-
-# Try to retrieve the record and update it if necessary 
-try:
-    currentIP = userClient.get_records(domain, record_type='A', name=name)
-    if (publicIP != currentIP[0]["data"]):
-        updateResult = userClient.update_record_ip(publicIP, domain, name, 'A')
-        if updateResult is True:
-            ip_file = open('godaddy_ip.txt', 'w')
-            ip_file.write(publicIP)
+for name in names:
+    if os.path.isfile('godaddy_ip.txt'):
+        try:
+            ip_file = open('godaddy_ip.txt', 'r')
+            read_ip = ip_file.read().strip('\n')
             ip_file.close()
-            print('Updated DNS record and wrote IP file.')
-    else:
-        print('Checked the DNS record, no update needed.')
-except:
-    print(sys.exc_info()[1])
-    sys.exit()
+        except:
+            print("Cannot read IP file")
+            sys.exit()
+        if read_ip == publicIP:
+            print("Read the IP file, no need to change IP")
+            sys.exit()
+
+    # Try to retrieve the record and update it if necessary 
+    try:
+        currentIP = userClient.get_records(domain, record_type='A', name=name)
+        if (publicIP != currentIP[0]["data"]):
+            updateResult = userClient.update_record_ip(publicIP, domain, name, 'A')
+            if updateResult is True:
+                ip_file = open('godaddy_ip.txt', 'w')
+                ip_file.write(publicIP)
+                ip_file.close()
+                print('Updated DNS record and wrote IP file.')
+        else:
+            print('Checked the DNS record, no update needed.')
+    except:
+        print(sys.exc_info()[1])
+        sys.exit()
